@@ -14,18 +14,19 @@ list_of_scenarios(Version) ->
     Scenarios = [{100,0,0,0},{50,50,0,0}, {20,10,70,0}, {9,1,90,0}, {1,0,99,0}, {0,0,0,100}],
     KeyRangeSizes = [NrOfOperations div round(math:pow(10, X)) || X <-lists:seq(1, 3)],
     TableTypes = [set],
+    WorkerHeapSizes = [233, 233*100, 233*10000],
     ConcurrencyOptionsList = 
 	[[{write_concurrency,true}, {read_concurrency,true}],
 	[{write_concurrency,true}]],
-    [[TableType, NrOfOperations, KeyRangeSize, Scenario, ConcurrencyOptions] || 
+    [[TableType, NrOfOperations, KeyRangeSize, Scenario, ConcurrencyOptions, WorkerHeapSize] || 
         Scenario <- Scenarios, 
         KeyRangeSize <- KeyRangeSizes, 
         TableType <- TableTypes,
-        ConcurrencyOptions <- ConcurrencyOptionsList].
+        ConcurrencyOptions <- ConcurrencyOptionsList,
+        WorkerHeapSize <- WorkerHeapSizes].
 
 
-run([TableType, NrOfOperations, KeyRangeSize, Scenario, ConcurrencyOptions|_], _, _) ->
-    io:format("opts ~p ~n", [[TableType, public | ConcurrencyOptions]]),
+run([TableType, NrOfOperations, KeyRangeSize, Scenario, ConcurrencyOptions, WorkerHeapSize|_], _, _) ->
     Table = ets:new(test_table, 
                     [TableType, public | ConcurrencyOptions]),
     NrOfSchedulers = erlang:system_info(schedulers),
@@ -44,6 +45,7 @@ run([TableType, NrOfOperations, KeyRangeSize, Scenario, ConcurrencyOptions|_], _
                     end, 
                 KeyRangeSize, 
                 Scenario,
+                WorkerHeapSize,
                 now())
       end,  
       lists:seq(1, NrOfSchedulers)),
@@ -63,16 +65,18 @@ start_do_operations_process(Table,
                             NrOfOperations, 
                             KeyRangeSize, 
                             Scenario,
+                            WorkerHeapSize,
                             RandomGenState) ->
     CreatorPid = self(),
-    spawn(fun () ->
-                  do_operations(Table, 
+    spawn_opt(fun () ->
+                      do_operations(Table, 
                                 NrOfOperations, 
                                 KeyRangeSize, 
                                 Scenario,
                                 RandomGenState),
-                  CreatorPid ! ready 
-          end).
+                      CreatorPid ! ready 
+              end,
+              [{min_heap_size, WorkerHeapSize}]).
 
 do_operations(_, 0, _, _, _) ->
     ok;

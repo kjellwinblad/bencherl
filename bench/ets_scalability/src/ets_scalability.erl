@@ -3,7 +3,7 @@
 -export([bench_args/2, run/3]).
 
 bench_args(Version, _) ->
-    [[all, Version] | list_of_scenarios(Version)].
+    [list_of_scenarios(Version)].
 
 list_of_scenarios(Version) ->
     NrOfOperations = case Version of
@@ -11,8 +11,8 @@ list_of_scenarios(Version) ->
                          intermediate -> 200000;
                          long         -> 2000000
                      end,
-    Scenarios = [{100,0,0},{50,50,0}, {20,10,70}, {9,1,90}, {1,0,99}],
-    KeyRangeSizes = [NrOfOperations div 100],
+    Scenarios = [{100,0,0,0},{50,50,0,0}, {20,10,70,0}, {9,1,90,0}, {1,0,99,0}, {0,0,0,100}],
+    KeyRangeSizes = [NrOfOperations div round(math:pow(10, X)) || X <-lists:seq(1, 3)],
     TableTypes = [set],
     ConcurrencyOptionsList = 
 	[[{write_concurrency,true}, {read_concurrency,true}],
@@ -23,12 +23,7 @@ list_of_scenarios(Version) ->
         TableType <- TableTypes,
         ConcurrencyOptions <- ConcurrencyOptionsList].
 
-run([all, Version|_], _, _) ->
-    lists:foreach(
-      fun (Scenario) ->
-              run(Scenario, nothing, nothing)
-      end
-      ,list_of_scenarios(Version));
+
 run([TableType, NrOfOperations, KeyRangeSize, Scenario, ConcurrencyOptions|_], _, _) ->
     Table = ets:new(test_table, 
                     [TableType, public | ConcurrencyOptions]),
@@ -83,7 +78,7 @@ do_operations(_, 0, _, _, _) ->
 do_operations(Table,
               NrOfOperations, 
               KeyRangeSize, 
-              Scenarios = {PercentageInserts, PercentageDeletes, _PercentageLookups}, 
+              Scenarios = {PercentageInserts, PercentageDeletes, PercentageLookups, _ProcentageNothing}, 
               RandomGenState) ->
     {OperationSelecRandomNum, NewRandomGenState1} = 
         random:uniform_s(100, RandomGenState),
@@ -94,7 +89,9 @@ do_operations(Table,
             ets:insert(Table, {Key});
         N when N =< (PercentageInserts + PercentageDeletes) ->
             ets:delete(Table, {Key});
+        N when N =< (PercentageInserts + PercentageDeletes + PercentageLookups) ->
+            ets:lookup(Table, {Key});
         _ ->
-            ets:lookup(Table, {Key})    
+            nothing
     end,
     do_operations(Table, NrOfOperations - 1, KeyRangeSize, Scenarios, NewRandomGenState2).

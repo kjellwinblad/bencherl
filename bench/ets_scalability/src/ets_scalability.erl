@@ -3,7 +3,7 @@
 -export([bench_args/2, run/3]).
 
 bench_args(Version, _) ->
-    [list_of_scenarios(Version)].
+    list_of_scenarios(Version).
 
 list_of_scenarios(Version) ->
     NrOfOperations = case Version of
@@ -25,6 +25,7 @@ list_of_scenarios(Version) ->
 
 
 run([TableType, NrOfOperations, KeyRangeSize, Scenario, ConcurrencyOptions|_], _, _) ->
+    io:format("opts ~p ~n", [[TableType, public | ConcurrencyOptions]]),
     Table = ets:new(test_table, 
                     [TableType, public | ConcurrencyOptions]),
     NrOfSchedulers = erlang:system_info(schedulers),

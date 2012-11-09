@@ -23,7 +23,6 @@ $(EBIND):
 $(UI_BIN):
 	cd ui/ChicagoBoss-0.8.0 ; \
 	echo "Building Chicago Boss" ; \
-	./rebar get-deps compile; \
 	make
 	sed -i -e "s@BENCHERL_SUITE_PATH@`pwd`@g" ui/bencherlui/boss.config
 	cd ui/bencherlui ; \

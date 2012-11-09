@@ -21,8 +21,11 @@ $(EBIND):
 	mkdir -p $(EBIND)
 
 $(UI_BIN):
-	cd ui/ChicagoBoss-0.8.0 ; \
 	echo "Building Chicago Boss" ; \
+	cd ui ; \
+	rm -rf ChicagoBoss-0.8.0 ; \
+	tar xvzf ChicagoBoss-0.8.0.tar.gz
+	cd ui/ChicagoBoss-0.8.0 ; \
 	make
 	sed -i -e "s@BENCHERL_SUITE_PATH@`pwd`@g" ui/bencherlui/boss.config
 	cd ui/bencherlui ; \

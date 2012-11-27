@@ -14,7 +14,7 @@ list_of_scenarios(Version) ->
 	    intermediate -> 2000000;
 	    long         -> 20000000
 	end,
-    TableImpels = [ets, etsm, etsmp, etsa],
+    TableImpels = [ets, etsmp, subtable_hash],%etsm, etsa],
     [[small_nr_fixed_keys, NrOfOperations, TableImpel] || TableImpel <- TableImpels].
 
 run_bench(NrOfOperations, TableImpel) ->
@@ -26,10 +26,15 @@ run_bench(NrOfOperations, TableImpel) ->
 %% Max = maximum number of DIFFERENT inserts
 %% WorkerCount = number of parallel inserts
 par_insert(Count, Max, WorkerCount, TableImpel) ->
-	{Table, Workers} = setup(Count, Max, WorkerCount, TableImpel),
-	par_insert(Workers),
-	TableImpel:delete(Table),
-	ok.
+    {Table, Workers} = setup(Count, Max, WorkerCount, TableImpel),
+    par_insert(Workers),
+    case TableImpel of
+	subtable_hash ->
+	    ets:delete(Table);
+	_ ->
+	    TableImpel:delete(Table)
+    end,
+    ok.
 
 %% start workers and wait for workers to finish
 par_insert(Workers) ->
@@ -61,8 +66,14 @@ insert(Num, Count, Max, Table, Src, TableImpel) ->
 	insert(Num+1, Count, Max, Table, Src, TableImpel).
 
 setup(Count, Max, WorkerCount, TableImpel) ->
-	Table = TableImpel:new(?MODULE, [set, public, {read_concurrency, true}, {write_concurrency, true}]),
-	setup(Count, Max, WorkerCount, Table, 0, [], TableImpel).
+    {Table, InModule} = 
+	case TableImpel of
+	    subtable_hash ->
+		{ets:new(?MODULE, [subtable_hash, public, {read_concurrency, true}, {write_concurrency, true}]), ets};
+	    _ ->
+		{TableImpel:new(?MODULE, [set, public, {read_concurrency, true}, {write_concurrency, true}]), TableImpel}
+	end,
+	setup(Count, Max, WorkerCount, Table, 0, [], InModule).
 
 setup(_Count, _Max, _WorkerCount, Table, _WorkerCount, Workers, _TableImpel) ->
 	{Table, Workers};

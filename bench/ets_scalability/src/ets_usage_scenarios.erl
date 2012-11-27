@@ -9,7 +9,7 @@ list_of_scenarios(Version) ->
                          long         -> 2000000
                      end,
     Scenarios = [{100,0,0,0}],
-    KeyRangeSizes = [NrOfOperations div round(math:pow(10, X)) || X <-lists:seq(0, 0)],
+    KeyRangeSizes = [NrOfOperations div round(math:pow(10, X)) || X <- [0,3]],%<-lists:seq(0, 0)],
     TableTypes = [set, subtable_hash],
     WorkerHeapSizes = [23300],%, 233*100, 233*10000],
     ConcurrencyOptionsList = 

@@ -1,4 +1,4 @@
--module(ets_usage_scenarios).
+-module(ets_usage_scenarios_test).
 
 -export([run_bench/6, list_of_scenarios/1]).
 
@@ -9,7 +9,7 @@ list_of_scenarios(Version) ->
                          long         -> 2000000
                      end,
     Scenarios = [{0,0,0,100}],%[{100,0,0,0},{50,50,0,0}, {20,10,70,0}, {9,1,90,0}, {1,0,99,0}, {0,0,0,100}],
-    KeyRangeSizes = [NrOfOperations div round(math:pow(10, X)) || X <-lists:seq(1, 3)],
+    KeyRangeSizes = [NrOfOperations div round(math:pow(10, X)) || X <-lists:seq(1,1)],
     TableTypes = [set],
     WorkerHeapSizes = [233],%, 233*100, 233*10000],
     ConcurrencyOptionsList = 
@@ -80,24 +80,24 @@ do_operations(_, 0, _, _, _) ->
 do_operations(Table,
               NrOfOperations, 
               KeyRangeSize, 
-              Scenarios = {PercentageInserts, PercentageDeletes, PercentageLookups, _ProcentageNothing}, 
+              Scenarios = {_PercentageInserts, _PercentageDeletes, _PercentageLookups, _ProcentageNothing}, 
               RandomGenState) ->
-    {OperationSelecRandomNum, NewRandomGenState1} = 
-        random:uniform_s(100, RandomGenState),
-    {Key, NewRandomGenState2} = 
-        random:uniform_s(KeyRangeSize, NewRandomGenState1),
-    case OperationSelecRandomNum of
-        N when N =< PercentageInserts ->
+%    {OperationSelecRandomNum, NewRandomGenState1} = 
+%        random:uniform_s(100, RandomGenState),
+%    {Key, NewRandomGenState2} = 
+%        random:uniform_s(KeyRangeSize, NewRandomGenState1),
+%    case OperationSelecRandomNum of
+%        N when N =< PercentageInserts ->
 %	    io:format("i"),
-            ets:insert(Table, {Key});
-        N when N =< (PercentageInserts + PercentageDeletes) ->
+%            ets:insert(Table, {Key});
+%        N when N =< (PercentageInserts + PercentageDeletes) ->
 %            io:format("d"),
-	    ets:delete(Table, {Key});
-        N when N =< (PercentageInserts + PercentageDeletes + PercentageLookups) ->
+%	    ets:delete(Table, {Key});
+%        N when N =< (PercentageInserts + PercentageDeletes + PercentageLookups) ->
 %            io:format("l"),
-	    ets:lookup(Table, {Key});
-        _ ->
+%	    ets:lookup(Table, {Key});
+%        _ ->
 %	    io:format("n"),
-            nothing
-    end,
-    do_operations(Table, NrOfOperations - 1, KeyRangeSize, Scenarios, NewRandomGenState2).
+%            nothing
+%    end,
+    do_operations(Table, NrOfOperations - 1, KeyRangeSize, Scenarios, RandomGenState).

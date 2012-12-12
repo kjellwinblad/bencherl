@@ -8,12 +8,12 @@ list_of_scenarios(Version) ->
                          intermediate -> 200000;
                          long         -> 2000000
                      end,
-    Scenarios = [{100,0,0,0}],
+    Scenarios = [{100,0,0,0}, {50,50,0,0}, {2,0,98,0}],
     KeyRangeSizes = [NrOfOperations div round(math:pow(10, X)) || X <- [0,3]],%<-lists:seq(0, 0)],
-    TableTypes = [set, subtable_hash],
+    TableTypes = [ordered_set, generic_interface],
     WorkerHeapSizes = [23300],%, 233*100, 233*10000],
     ConcurrencyOptionsList = 
-	[[{write_concurrency,true}, {read_concurrency,true}]],%,
+	[[]],%[[{write_concurrency,true}, {read_concurrency,true}]],%,
 	%[{write_concurrency,true}]],
     [[ets_usage_scenarios, TableType, NrOfOperations, KeyRangeSize, Scenario, ConcurrencyOptions, WorkerHeapSize] || 
         Scenario <- Scenarios, 
